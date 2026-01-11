@@ -18,15 +18,13 @@ df = load_data()
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-# 3. THE UI AND COMPARISON LOGIC (ORDERED & UNCOLORED)
 # -----------------------------------------------------------------------------
-# -----------------------------------------------------------------------------
-# 3. THE UI AND COMPARISON LOGIC (FIXED COLUMN ORDER)
+# 3. THE UI AND COMPARISON LOGIC (FINAL POLISHED VERSION)
 # -----------------------------------------------------------------------------
 st.title("💊 Antibiotic Coverage Comparison")
 
 if not df.empty:
-    # 1. Identify classification column (Column 0) and antibiotic list (Column 1 onwards)
+    # Identify the classification column and antibiotic names
     classification_col = df.columns[0] 
     antibiotic_list = df.columns[1:].tolist()
     
@@ -39,31 +37,42 @@ if not df.empty:
     if selected_antibiotics:
         st.divider()
         
-        # 2. Filter: rows where at least one selected antibiotic has data
+        # 1. Filter: Find rows where any selected antibiotic has a value
         mask = df[selected_antibiotics].notna().any(axis=1)
         
-        # 3. Force order: [Classification, Antibiotic 1, Antibiotic 2...]
+        # 2. Arrange Columns: [Classification/Type] + [Selected Antibiotics]
         display_cols = [classification_col] + selected_antibiotics
-        comparison_df = df.loc[mask, display_cols]
+        comparison_df = df.loc[mask, display_cols].copy()
         
-        # 4. STYLING FUNCTION
+        # 3. STYLING FUNCTION
         def highlight_diff(val):
-            if pd.isna(val) or val == "" or str(val).lower() == 'none':
-                return 'background-color: #f0f2f6; color: #999999' # Gray
-            if str(val).upper() == 'V':
-                return 'background-color: #ffeeba; color: black'   # Yellow
-            return 'background-color: #d4edda; color: black'       # Green
+            # Convert to string and clean up for checking
+            v_str = str(val).strip().lower()
+            
+            # Handle empty/None cells (Gray)
+            if pd.isna(val) or v_str == "" or v_str == 'none':
+                return 'background-color: #f0f2f6; color: #999999'
+            
+            # Handle Variable coverage (Yellow)
+            if v_str == 'v':
+                return 'background-color: #ffeeba; color: black'
+            
+            # Handle Susceptible (Green)
+            return 'background-color: #d4edda; color: black'
 
         st.subheader("Comparison Results")
         
-        # 5. APPLY STYLING ONLY TO ANTIBIOTIC COLUMNS
-        # This keeps the 'Type' column (the first data column) uncolored
+        # 4. TARGETED STYLING: 
+        # We tell the map function to ONLY look at the antibiotic columns.
+        # This keeps your 'Type' column clean and professional.
         styled_df = comparison_df.style.map(
             highlight_diff, 
             subset=selected_antibiotics
         )
         
         st.dataframe(styled_df, use_container_width=True)
+    else:
+        st.info("💡 Select antibiotics above to begin comparison.")
 
 # 4. SIDEBAR
 with st.sidebar:
