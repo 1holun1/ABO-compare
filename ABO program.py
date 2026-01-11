@@ -20,10 +20,13 @@ df = load_data()
 # -----------------------------------------------------------------------------
 # 3. THE UI AND COMPARISON LOGIC (ORDERED & UNCOLORED)
 # -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# 3. THE UI AND COMPARISON LOGIC (FIXED COLUMN ORDER)
+# -----------------------------------------------------------------------------
 st.title("💊 Antibiotic Coverage Comparison")
 
 if not df.empty:
-    # 1. Identify classification (Type) and antibiotic columns
+    # 1. Identify classification column (Column 0) and antibiotic list (Column 1 onwards)
     classification_col = df.columns[0] 
     antibiotic_list = df.columns[1:].tolist()
     
@@ -39,14 +42,13 @@ if not df.empty:
         # 2. Filter: rows where at least one selected antibiotic has data
         mask = df[selected_antibiotics].notna().any(axis=1)
         
-        # 3. Order the columns: Classification first, then Antibiotics
+        # 3. Force order: [Classification, Antibiotic 1, Antibiotic 2...]
         display_cols = [classification_col] + selected_antibiotics
         comparison_df = df.loc[mask, display_cols]
         
-        # 4. UPDATED STYLING FUNCTION
-        # We use 'subset' in the applymap to avoid coloring the first column
+        # 4. STYLING FUNCTION
         def highlight_diff(val):
-            if pd.isna(val) or val == "":
+            if pd.isna(val) or val == "" or str(val).lower() == 'none':
                 return 'background-color: #f0f2f6; color: #999999' # Gray
             if str(val).upper() == 'V':
                 return 'background-color: #ffeeba; color: black'   # Yellow
@@ -54,9 +56,9 @@ if not df.empty:
 
         st.subheader("Comparison Results")
         
-        # We apply styling ONLY to the antibiotic columns
-        # This keeps the 'Type' column (the first one) clean and uncolored
-        styled_df = comparison_df.style.applymap(
+        # 5. APPLY STYLING ONLY TO ANTIBIOTIC COLUMNS
+        # This keeps the 'Type' column (the first data column) uncolored
+        styled_df = comparison_df.style.map(
             highlight_diff, 
             subset=selected_antibiotics
         )
