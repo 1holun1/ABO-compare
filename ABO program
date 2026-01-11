@@ -1,0 +1,30 @@
+# --- The Multi-Search Feature ---
+# We change st.selectbox to st.multiselect
+antibiotic_list = df.columns.tolist()
+selected_antibiotics = st.multiselect(
+    "Search and compare antibiotics:", 
+    antibiotic_list, 
+    placeholder="Select two or more to compare..."
+)
+
+# --- Display Results ---
+if selected_antibiotics:
+    st.divider()
+    
+    # Logic: Show rows where AT LEAST ONE of the selected antibiotics has data
+    # .any(axis=1) checks across the row for any non-empty cell
+    mask = df[selected_antibiotics].notna().any(axis=1)
+    coverage_data = df.loc[mask, selected_antibiotics]
+    
+    if coverage_data.empty:
+        st.warning("No coverage data found for the selected combination.")
+    else:
+        # Styling remains the same
+        def highlight_status(val):
+            if pd.isna(val): return '' # Leave empty cells alone
+            if str(val).upper() == 'V':
+                return 'background-color: #ffeeba; color: black'
+            return 'background-color: #d4edda; color: black'
+        
+        st.write(f"### Comparison Table")
+        st.dataframe(coverage_data.style.applymap(highlight_status), use_container_width=True)
