@@ -64,7 +64,20 @@ if not df.empty:
         )
         
         # Hide the default index (the 0, 1, 2, 3 numbers)
-        st.dataframe(styled_df, use_container_width=True, hide_index=True)
+# --- Display with custom column widths ---
+st.dataframe(
+    styled_df, 
+    use_container_width=True, 
+    hide_index=True,
+    column_config={
+        type_col: st.column_config.TextColumn(
+            "Type",
+            width="small",  # Forces this column to be narrow
+        ),
+    }
+)
+
+  
 
 # 4. SIDEBAR
 with st.sidebar:
