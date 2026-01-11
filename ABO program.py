@@ -39,9 +39,31 @@ if not df.empty:
         )
         st.info("The dropdown menu here will usually expand downward as long as there is space in the sidebar.")
 
-    # 3. MAIN AREA RESULTS
+ # -----------------------------------------------------------------------------
+# 3. THE UI AND COMPARISON LOGIC (FORCE DROPDOWN DOWN)
+# -----------------------------------------------------------------------------
+st.title("💊 Antibiotic Coverage Comparison")
+
+if not df.empty:
+    # 1. Selection Area
+    antibiotic_list = df.columns[2:].tolist()
+    
+    selected_antibiotics = st.multiselect(
+        "Search and compare antibiotics:", 
+        options=antibiotic_list, 
+        placeholder="Choose antibiotics..."
+    )
+
+    # 2. THE SECRET TRICK: Add a tiny bit of empty space here
+    # This encourages the dropdown to open DOWN instead of UP
+    st.write(" ") 
+
     if selected_antibiotics:
+        st.divider()
+        
         # Filter logic
+        bacteria_col = df.columns[0]
+        type_col = df.columns[1]
         mask = df[selected_antibiotics].notna().any(axis=1)
         display_cols = [type_col, bacteria_col] + selected_antibiotics
         comparison_df = df.loc[mask, display_cols].copy()
@@ -70,8 +92,11 @@ if not df.empty:
             }
         )
     else:
-        st.info("👈 Use the sidebar on the left to select antibiotics for comparison.")
-  
+        # 3. Add a large "Buffer" of empty space when nothing is selected
+        # This keeps the search bar at the top and ensures the first click 
+        # always drops the menu DOWN.
+        for _ in range(15):
+            st.write("")
 
 # 4. SIDEBAR
 with st.sidebar:
