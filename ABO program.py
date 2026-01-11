@@ -17,16 +17,15 @@ def load_data():
 df = load_data()
 
 # -----------------------------------------------------------------------------
-# 3. THE UI AND COMPARISON LOGIC (WITH CLASSIFICATION)
+# -----------------------------------------------------------------------------
+# 3. THE UI AND COMPARISON LOGIC (ORDERED & UNCOLORED)
 # -----------------------------------------------------------------------------
 st.title("💊 Antibiotic Coverage Comparison")
-st.markdown("Compare antibiotic coverage with bacterial classification (Gram stain/Type).")
 
 if not df.empty:
-    # Identify antibiotic columns (everything except 'Type')
-    # We use 'Type' because that is the name in your Excel image
-    all_columns = df.columns.tolist()
-    antibiotic_list = [col for col in all_columns if col != 'Type']
+    # 1. Identify classification (Type) and antibiotic columns
+    classification_col = df.columns[0] 
+    antibiotic_list = df.columns[1:].tolist()
     
     selected_antibiotics = st.multiselect(
         "Search and compare antibiotics:", 
@@ -37,21 +36,16 @@ if not df.empty:
     if selected_antibiotics:
         st.divider()
         
-        # FILTER LOGIC:
-        # Rows where at least one selected antibiotic has data
+        # 2. Filter: rows where at least one selected antibiotic has data
         mask = df[selected_antibiotics].notna().any(axis=1)
         
-        # Create display table: Always include 'Type' followed by selections
-        display_columns = ['Type'] + selected_antibiotics
-        comparison_df = df.loc[mask, display_columns]
+        # 3. Order the columns: Classification first, then Antibiotics
+        display_cols = [classification_col] + selected_antibiotics
+        comparison_df = df.loc[mask, display_cols]
         
-        # STYLING FUNCTION
+        # 4. UPDATED STYLING FUNCTION
+        # We use 'subset' in the applymap to avoid coloring the first column
         def highlight_diff(val):
-            # Do not color the classification text
-            classification_keywords = ['Anaerobes', 'Atypical', 'Gram Positive', 'Gram Negative']
-            if any(key in str(val) for key in classification_keywords):
-                return ''
-            
             if pd.isna(val) or val == "":
                 return 'background-color: #f0f2f6; color: #999999' # Gray
             if str(val).upper() == 'V':
@@ -59,12 +53,15 @@ if not df.empty:
             return 'background-color: #d4edda; color: black'       # Green
 
         st.subheader("Comparison Results")
-        st.dataframe(
-            comparison_df.style.applymap(highlight_diff), 
-            use_container_width=True
+        
+        # We apply styling ONLY to the antibiotic columns
+        # This keeps the 'Type' column (the first one) clean and uncolored
+        styled_df = comparison_df.style.applymap(
+            highlight_diff, 
+            subset=selected_antibiotics
         )
-else:
-    st.error("Data could not be loaded. Check your file name in the code.")
+        
+        st.dataframe(styled_df, use_container_width=True)
 
 # 4. SIDEBAR
 with st.sidebar:
