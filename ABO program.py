@@ -21,7 +21,7 @@ df = load_data()
 # -----------------------------------------------------------------------------
 # 3. THE UI AND COMPARISON LOGIC (TYPE ON THE FAR LEFT)
 # -----------------------------------------------------------------------------
-st.title("💊 Antibiotic Coverage Comparison")
+st.title("💊 Antibiotic Coverage")
 
 if not df.empty:
     # 1. Identify your columns by their position
