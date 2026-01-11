@@ -18,7 +18,7 @@ df = load_data()
 
 # 3. THE UI AND COMPARISON LOGIC (REPLACED SECTION)
 st.title("💊 Antibiotic Coverage Comparison")
-st.markdown("Select multiple antibiotics to compare their bacterial coverage side-by-side.")
+st.markdown("Select multiple antibiotics to check their coverage:")
 
 if not df.empty:
     # Changed from selectbox to multiselect
@@ -26,7 +26,7 @@ if not df.empty:
     selected_antibiotics = st.multiselect(
         "Search and compare antibiotics:", 
         options=antibiotic_list, 
-        placeholder="Select antibiotics (e.g., Penicillin G, Flucloxacillin...)"
+        placeholder="Select antibiotics (e.g. Penicillin G, Flucloxacillin...)"
     )
 
     if selected_antibiotics:
@@ -54,7 +54,7 @@ if not df.empty:
         st.dataframe(
             comparison_df.style.applymap(highlight_diff), 
             use_container_width=True,
-            height=400
+            height=1000
         )
     else:
         st.info("💡 Start typing above to select and compare antibiotics.")
