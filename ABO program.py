@@ -16,51 +16,55 @@ def load_data():
 
 df = load_data()
 
-# 3. THE UI AND COMPARISON LOGIC (REPLACED SECTION)
+# -----------------------------------------------------------------------------
+# 3. THE UI AND COMPARISON LOGIC (WITH CLASSIFICATION)
+# -----------------------------------------------------------------------------
 st.title("💊 Antibiotic Coverage Comparison")
-st.markdown("Select multiple antibiotics to check their coverage:")
+st.markdown("Compare antibiotic coverage with bacterial classification (Gram stain/Type).")
 
 if not df.empty:
-    # Changed from selectbox to multiselect
-    antibiotic_list = df.columns.tolist()
+    # Identify antibiotic columns (everything except 'Type')
+    # We use 'Type' because that is the name in your Excel image
+    all_columns = df.columns.tolist()
+    antibiotic_list = [col for col in all_columns if col != 'Type']
+    
     selected_antibiotics = st.multiselect(
         "Search and compare antibiotics:", 
         options=antibiotic_list, 
-        placeholder="Select antibiotics (e.g. Penicillin G, Flucloxacillin...)"
+        placeholder="Select antibiotics..."
     )
 
     if selected_antibiotics:
         st.divider()
         
         # FILTER LOGIC:
-        # Create a 'mask' that finds rows where AT LEAST ONE selected column is not empty
+        # Rows where at least one selected antibiotic has data
         mask = df[selected_antibiotics].notna().any(axis=1)
         
-        # Create the comparison table
-        comparison_df = df.loc[mask, selected_antibiotics]
+        # Create display table: Always include 'Type' followed by selections
+        display_columns = ['Type'] + selected_antibiotics
+        comparison_df = df.loc[mask, display_columns]
         
-        # UPDATED STYLING FUNCTION:
+        # STYLING FUNCTION
         def highlight_diff(val):
+            # Do not color the classification text
+            classification_keywords = ['Anaerobes', 'Atypical', 'Gram Positive', 'Gram Negative']
+            if any(key in str(val) for key in classification_keywords):
+                return ''
+            
             if pd.isna(val) or val == "":
-                return 'background-color: #f0f2f6; color: #999999' # Gray for No Coverage
+                return 'background-color: #f0f2f6; color: #999999' # Gray
             if str(val).upper() == 'V':
-                return 'background-color: #ffeeba; color: black'   # Yellow for Variable
-            return 'background-color: #d4edda; color: black'       # Green for Susceptible
+                return 'background-color: #ffeeba; color: black'   # Yellow
+            return 'background-color: #d4edda; color: black'       # Green
 
         st.subheader("Comparison Results")
-        st.write("The table below shows all bacteria covered by *at least one* of your selections.")
-        
-        # Display the interactive table
         st.dataframe(
             comparison_df.style.applymap(highlight_diff), 
-            use_container_width=True,
-            height=1000
+            use_container_width=True
         )
-    else:
-        st.info("💡 Start typing above to select and compare antibiotics.")
-
 else:
-    st.error("Please ensure 'ABO_data.xlsx' is in the folder.")
+    st.error("Data could not be loaded. Check your file name in the code.")
 
 # 4. SIDEBAR
 with st.sidebar:
