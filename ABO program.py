@@ -69,4 +69,4 @@ if not df.empty:
 # 4. SIDEBAR
 with st.sidebar:
     st.write("### Legend")
-    st.info("**Green**: Susceptible (✔/S)\n\n**Yellow**: Variable (V)\n\n**Gray**: No Coverage/Resistant")
+    st.info("**Green (✔)**: Susceptible\n\n**Yellow (V)**: Variable \n\n**Gray**: No data/ Resistant")
