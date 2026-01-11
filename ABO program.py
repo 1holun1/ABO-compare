@@ -18,60 +18,59 @@ df = load_data()
 
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
-# 3. THE UI AND COMPARISON LOGIC
+# -----------------------------------------------------------------------------
+# 3. THE UI AND COMPARISON LOGIC (SIDEBAR VERSION)
 # -----------------------------------------------------------------------------
 st.title("💊 Antibiotic Coverage Comparison")
 
-# Use a container to keep the search area organized
-search_container = st.container()
-results_container = st.container()
-
 if not df.empty:
-    with search_container:
-        classification_col = df.columns[1] # 'Type'
-        bacteria_col = df.columns[0]       # 'Bacteria'
-        antibiotic_list = df.columns[2:].tolist()
-        
+    # 1. Setup column names
+    bacteria_col = df.columns[0]
+    type_col = df.columns[1]
+    antibiotic_list = df.columns[2:].tolist()
+    
+    # 2. MOVE THE SELECTION TO THE SIDEBAR
+    with st.sidebar:
+        st.header("Settings")
         selected_antibiotics = st.multiselect(
-            "Search and compare antibiotics:", 
+            "Select antibiotics to compare:", 
             options=antibiotic_list, 
-            placeholder="Select antibiotics..."
+            placeholder="Choose antibiotics..."
         )
+        st.info("The dropdown menu here will usually expand downward as long as there is space in the sidebar.")
 
-    with results_container:
-        if selected_antibiotics:
-            st.divider()
-            
-            # Filter logic
-            mask = df[selected_antibiotics].notna().any(axis=1)
-            display_cols = [classification_col, bacteria_col] + selected_antibiotics
-            comparison_df = df.loc[mask, display_cols].copy()
-            
-            # Styling
-            def highlight_diff(val):
-                v_str = str(val).strip().lower()
-                if pd.isna(val) or v_str == "" or v_str == 'none':
-                    return 'background-color: #f0f2f6; color: #999999'
-                if v_str == 'v':
-                    return 'background-color: #ffeeba; color: black'
-                return 'background-color: #d4edda; color: black'
+    # 3. MAIN AREA RESULTS
+    if selected_antibiotics:
+        # Filter logic
+        mask = df[selected_antibiotics].notna().any(axis=1)
+        display_cols = [type_col, bacteria_col] + selected_antibiotics
+        comparison_df = df.loc[mask, display_cols].copy()
+        
+        # Styling
+        def highlight_diff(val):
+            v_str = str(val).strip().lower()
+            if pd.isna(val) or v_str == "" or v_str == 'none':
+                return 'background-color: #f0f2f6; color: #999999'
+            if v_str == 'v':
+                return 'background-color: #ffeeba; color: black'
+            return 'background-color: #d4edda; color: black'
 
-            styled_df = comparison_df.style.map(
-                highlight_diff, 
-                subset=selected_antibiotics
-            )
-            
-            st.subheader("Comparison Results")
-            st.dataframe(
-                styled_df, 
-                use_container_width=True, 
-                hide_index=True,
-                column_config={
-                    classification_col: st.column_config.TextColumn("Type", width="small")
-                }
-            )
-        else:
-            st.info("💡 Select antibiotics above to begin comparison.")
+        styled_df = comparison_df.style.map(
+            highlight_diff, 
+            subset=selected_antibiotics
+        )
+        
+        st.subheader("Comparison Results")
+        st.dataframe(
+            styled_df, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={
+                type_col: st.column_config.TextColumn("Type", width="small")
+            }
+        )
+    else:
+        st.info("👈 Use the sidebar on the left to select antibiotics for comparison.")
   
 
 # 4. SIDEBAR
